@@ -1,0 +1,14 @@
+PyPDF2
+google.generativeai
+python-dotenv
+flask
+pymongo
+flask-mail 
+itsdangerous
+flask_wtf
+email-validator
+fpdf2
+flask-cors
+pdfplumber
+re
+werkzeug

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}
+Disclaimer - JobMentor
+{% endblock %}
+
+{% block content %}
+<section id="disclaimer-section" class="py-5" style="background-color: #eef2f3;">
+    <div class="container" style="max-width: 1000px; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+        <h1 class="text-center mb-4" style="font-weight: bold; color: #333;">Disclaimer</h1>
+
+        <div class="disclaimer-content">
+            <h4 style="color: #040d16;"><b>Interpretation</b></h4>
+            <p>
+                The words of which the initial letter is capitalized have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or plural form.
+            </p>
+
+            <h4 style="color: #040d16;"><b>Definitions</b></h4>
+            <p>The following definitions apply to this Disclaimer:</p>
+            <ul>
+                <li><b>Company:</b> (referred to as either "the Company", "We", "Us" or "Our" in this Disclaimer) refers to JobMentor.</li>
+                <li><b>Service:</b> Refers to the Website.</li>
+                <li><b>You:</b> Means the individual accessing the Service, or the company, or other legal entity on behalf of which such individual is accessing or using the Service, as applicable.</li>
+                <li><b>Website:</b> Refers to JobMentor, accessible from jobmentor.in.</li>
+            </ul>
+
+            <h4 style="color: #040d16;"><b>Disclaimer</b></h4>
+            <p>
+                The information contained on the Service is for general information purposes only. JobMentor assumes no responsibility for errors or omissions in the contents of the Service.
+            </p>
+            <p>
+                In no event shall the Company be liable for any special, direct, indirect, consequential, or incidental damages or any damages whatsoever, whether in an action of contract, negligence, or other tort, arising out of or in connection with the use of the Service or the contents of the Service.
+            </p>
+            <p>
+                The Company reserves the right to make additions, deletions, or modifications to the contents on the Service at any time without prior notice.
+            </p>
+
+            <h4 style="color: #040d16;"><b>External Links Disclaimer</b></h4>
+            <p>
+                The Service may contain links to external websites that are not provided or maintained by or in any way affiliated with JobMentor. Please note that JobMentor does not guarantee the accuracy, relevance, timeliness, or completeness of any information on these external websites.
+            </p>
+
+            <h4 style="color: #040d16;"><b>Errors and Omissions Disclaimer</b></h4>
+            <p>
+                The information given by the Service is for general guidance on matters of interest only. Even if JobMentor takes every precaution to ensure that the content of the Service is both current and accurate, errors can occur.
+            </p>
+            <p>
+                JobMentor is not responsible for any errors or omissions, or for the results obtained from the use of this information.
+            </p>
+
+            <h4 style="color: #040d16;"><b>Fair Use Disclaimer</b></h4>
+            <p>
+                JobMentor may use copyrighted material which has not always been specifically authorized by the copyright owner. JobMentor believes this constitutes "fair use" as provided for in section 107 of the United States Copyright law.
+            </p>
+            <p>
+                If You wish to use copyrighted material from the Service for purposes beyond fair use, You must obtain permission from the copyright owner.
+            </p>
+
+            <h4 style="color: #040d16;"><b>No Responsibility Disclaimer</b></h4>
+            <p>
+                The information on the Service is provided with the understanding that JobMentor is not engaged in rendering legal, accounting, tax, or other professional advice. It should not be used as a substitute for professional advice.
+            </p>
+
+            <h4 style="color: #040d16;"><b>Advertisements</b></h4>
+            <p>
+                The website displays advertisements, including but not limited to Google Ads. These ads are provided by third parties. We encourage users to carefully evaluate any offers presented through these ads.
+            </p>
+
+            <h4 style="color: #040d16;"><b>Contact Us</b></h4>
+            <p>
+                If you have any questions about this Disclaimer, You can contact Us:
+            </p>
+            <ul>
+                <li>Email: <a href="mailto:support@jobmentor.in">support@jobmentor.in</a></li>
+                <li>Website: <a href="{{ url_for('contact') }}">Contact Us Page</a></li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}

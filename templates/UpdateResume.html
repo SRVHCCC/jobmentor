@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}
+Update Resume Generator - JobMentor
+{% endblock %}
+
+{% block content %}
+<script>
+    async function generateUpdateresume(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Input Elements
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const resumeFile = document.getElementById('resume').files[0];
+        const loader = document.getElementById('loader');
+        const updateResumeSection = document.getElementById('update-resume-section');
+        const copyButton = document.getElementById('copy-button');
+
+        // Reset previous output
+        updateResumeSection.style.display = 'none';
+        updateResumeSection.innerHTML = '';
+        copyButton.style.display = 'none';
+
+        // Input Validation
+        if (!jobDescription) {
+            alert("Please provide the job description.");
+            return;
+        }
+
+        if (!resumeFile) {
+            alert("Please upload your resume.");
+            return;
+        }
+
+        const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedFormats.includes(resumeFile.type)) {
+            alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+            return;
+        }
+
+        // Prepare Form Data
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        formData.append('resume', resumeFile);
+
+        try {
+            // Show loader
+            loader.style.display = 'block';
+
+            // Send data to the backend via fetch
+            const response = await fetch('/resume-generator-api', {
+                method: 'POST',
+                body: formData,
+            });
+
+            // Check if response is okay
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Hide loader
+            loader.style.display = 'none';
+
+            // Display JSON response in structured format
+            if (data.resume) {
+                // Format and display the resume data
+                const resumeHtml = `
+                    <h3>Contact Information</h3>
+                    <ul>
+                        <li><strong>Name:</strong> ${data.resume.contact_information.name}</li>
+                        <li><strong>Email:</strong> <a href="mailto:${data.resume.contact_information.email}">${data.resume.contact_information.email}</a></li>
+                        <li><strong>LinkedIn:</strong> <a href="${data.resume.contact_information.linkedin}" target="_blank">${data.resume.contact_information.linkedin}</a></li>
+                        <li><strong>Location:</strong> ${data.resume.contact_information.location}</li>
+                        <li><strong>Phone:</strong> ${data.resume.contact_information.phone}</li>
+                    </ul>
+
+                    <h3>Education</h3>
+                    <ul>
+                        ${data.resume.education.map(edu => `
+                            <li>
+                                <strong>${edu.degree}</strong> (${edu.graduation_year}) - ${edu.institution} | CGPA: ${edu.cgpa}
+                            </li>
+                        `).join('')}
+                    </ul>
+
+                    <h3>Experience</h3>
+                    ${data.resume.experience.map(exp => `
+                        <div>
+                            <h4>${exp.title} at ${exp.company} (${exp.duration})</h4>
+                            <ul>
+                                ${exp.responsibilities.map(responsibility => `
+                                    <li>${responsibility}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+
+                    <h3>Objective</h3>
+                    <p>${data.resume.objective}</p>
+
+                    <h3>Projects</h3>
+                    ${data.resume.projects.map(project => `
+                        <div>
+                            <h4>${project.title} (${project.duration})</h4>
+                            <p>${project.description}</p>
+                            <strong>Tools Used:</strong> ${project.tools.join(', ')}
+                        </div>
+                    `).join('')}
+
+                    <h3>Skills</h3>
+                    <h4>Soft Skills</h4>
+                    <ul>
+                        ${data.resume.skills.soft_skills.map(skill => `<li>${skill}</li>`).join('')}
+                    </ul>
+
+                    <h4>Technical Skills</h4>
+                    <ul>
+                        ${data.resume.skills.technical_skills.map(skill => `<li>${skill}</li>`).join('')}
+                    </ul>
+                `;
+
+                updateResumeSection.innerHTML = resumeHtml;
+                updateResumeSection.style.display = 'block';
+
+                // Show copy button
+                copyButton.style.display = 'inline-block';
+
+                // Add click event for copy button
+                copyButton.onclick = () => {
+                const resumeText = updateResumeSection.innerText;  // Extract the text content (no HTML tags)
+                const tempTextArea = document.createElement('textarea');  // Create a temporary text area to hold the content
+
+                document.body.appendChild(tempTextArea);  // Append the text area to the body
+                tempTextArea.value = resumeText;  // Set the text content to the text area
+                tempTextArea.select();  // Select the text in the text area
+                document.execCommand('copy');  // Execute the copy command
+
+                document.body.removeChild(tempTextArea);  // Remove the temporary text area from the DOM
+
+                alert("Resume data copied to clipboard!");  // Notify the user
+            };
+
+            } else {
+                alert(data.message || "Error in generating updated resume. Please try again.");
+            }
+        } catch (error) {
+            // Hide loader in case of error
+            loader.style.display = 'none';
+            console.error('Error:', error);
+            alert(`An unexpected error occurred: ${error.message}. Please try again later.`);
+        }
+    }
+</script>
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Generate Your Updated Resume</h1>
+    <p class="lead fw-bold text-dark">Upload your job description and resume to receive a customized ATS-friendly resume in JSON format.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%;">
+        <!-- Form Section -->
+        <form id="ats-resume-form" enctype="multipart/form-data" onsubmit="generateUpdateresume(event)">
+            <!-- Job Description Textarea -->
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job_description" class="form-control" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+
+            <!-- Resume File Input -->
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control" accept=".pdf, .doc, .docx" required>
+            </div>
+
+            <!-- Generate Resume Button -->
+            <button type="submit" class="btn btn-success">Generate Updated Resume</button>
+        </form>
+
+        <!-- Loader -->
+        <div id="loader" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Display Generated Resume -->
+        <div id="update-resume-section" class="text-left mt-4 p-3 border rounded shadow bg-light" style="display: none;">
+        </div>
+
+        <!-- Copy Button -->
+        <div class="text-center mt-3">
+            <button id="copy-button" class="btn btn-secondary" style="display: none;">Copy Resume JSON to Clipboard</button>
+        </div>
+    </div>
+</div>
+
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <h2 class="fw-bold text-dark">How Companies Select Resumes</h2>
+    <p class="text-dark">Recruiters and hiring managers receive hundreds of resumes for a single job opening. To streamline the process, many companies use Applicant Tracking Systems (ATS) to filter resumes based on specific keywords and qualifications. An ATS evaluates resumes for:</p>
+    <ul class="text-dark">
+        <li><strong>Relevant Keywords:</strong> These are the skills, qualifications, and experiences mentioned in the job description.</li>
+        <li><strong>Proper Formatting:</strong> Resumes with simple and consistent formatting are more likely to be parsed correctly.</li>
+        <li><strong>Quantifiable Achievements:</strong> Highlighting measurable results makes a resume stand out.</li>
+    </ul>
+
+    <h2 class="fw-bold text-dark mt-5">How to Check and Improve Your ATS Score</h2>
+    <p class="text-dark">An ATS score indicates how well your resume matches the job description. A higher score improves your chances of being shortlisted. Here are steps to check and improve your ATS score:</p>
+    <ol class="text-dark">
+        <li><strong>Analyze the Job Description:</strong> Identify keywords and phrases that are repeated or emphasized.</li>
+        <li><strong>Customize Your Resume:</strong> Tailor your resume to include these keywords, ensuring they fit naturally.</li>
+        <li><strong>Use an ATS Tool:</strong> Tools like JobMentor can help you evaluate your resume's ATS compatibility.</li>
+        <li><strong>Keep Formatting Simple:</strong> Avoid using images, charts, or complex designs that ATS might not interpret correctly.</li>
+    </ol>
+
+    <h2 class="fw-bold text-dark mt-5">Why Resumes Get Rejected</h2>
+    <p class="text-dark">Even qualified candidates can face rejection due to the following reasons:</p>
+    <ul class="text-dark">
+        <li><strong>Generic Resume:</strong> A one-size-fits-all resume doesn't showcase how you meet specific job requirements.</li>
+        <li><strong>Lack of Keywords:</strong> Missing critical keywords from the job description can lead to low ATS scores.</li>
+        <li><strong>Spelling and Grammar Errors:</strong> These mistakes can create a negative impression.</li>
+        <li><strong>Inconsistent Formatting:</strong> Poorly formatted resumes may not be parsed correctly by ATS.</li>
+    </ul>
+
+    <p class="text-dark">To increase your chances of success, always tailor your resume, keep it error-free, and ensure it aligns with the job description. A well-optimized resume not only helps you pass ATS screening but also impresses hiring managers.</p>
+</div>
+
+{% endblock %}

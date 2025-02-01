@@ -1,0 +1,55 @@
+<footer id="footer" class="footer position-relative light-background">
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <!-- About Section -->
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="{{ url_for('index') }}" class="logo d-flex align-items-center">
+            <span class="sitename">JobMentor</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Gram Post Patna Tamoli District Panna Madhya Pradesh</p>
+            <p><strong>Phone:</strong> +91 8103306133</p>
+            <p><strong>Email:</strong> hchaurasiya666@gmail.com</p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href="https://x.com/Himansh33938060" target="_blank"><i class="bi bi-twitter"></i></a>
+            <a href="https://www.facebook.com/himanshu.chaurasiya.7564/" target="_blank" ><i class="bi bi-facebook"></i></a>
+            <a href="#"><i class="bi bi-instagram"></i></a>
+            <a href="https://www.linkedin.com/in/himanshu-chaurasiya-b87432288/" target="_blank"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+  
+        <!-- Useful Links -->
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('about') }}">About us</a></li>
+            <li><a href="{{ url_for('termscondition')}}">Terms of service</a></li>
+            <li><a href="{{ url_for('privacypolicy')}}">Privacy policy</a></li>
+            <li><a href="{{ url_for('disclaimer')}}">Disclamer</a></li>
+          </ul>
+        </div>
+  
+        <!-- Our Services -->
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            <li><a class="dropdown-item" href="{{ url_for('ats_score') }}">Check Ats Score</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('resume_generator') }}">Update Resume</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('cover_letter') }}" >Update Cover Letter</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('cold_mail') }}">Cold Mail</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('generate_questions') }}">Find Questions</a></li>
+          </ul>
+        </div>
+  
+        
+      </div>
+    </div>
+  
+    <!-- Footer Bottom -->
+    <div class="container text-center mt-4">
+      <p>&copy; <strong>JobMentor.com</strong>. All Rights Reserved</p>
+      <div>Designed by <a href="JobMentor.com">JobMentor</a></div>
+    </div>
+  </footer>

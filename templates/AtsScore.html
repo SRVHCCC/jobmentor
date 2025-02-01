@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}
+Check ATS Score - JobMentor | Optimize Your Resume for ATS
+{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Check your ATS score, optimize your resume for Applicant Tracking Systems (ATS), and increase your chances of passing ATS filters. Upload your resume and job description to get the score.">
+<meta name="keywords" content="ATS score, ATS checker, optimize resume, job description, resume optimization, ATS filter, resume score, job search, career tips">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Check ATS Score - JobMentor | Optimize Your Resume for ATS">
+<meta property="og:description" content="Upload your resume and job description to check your ATS score and improve your chances of passing ATS filters. Get detailed insights on your resume's performance.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ url_for('index') }}">
+<meta property="og:image" content="URL_OF_YOUR_IMAGE">
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function checkATSScore(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const jobDescription = document.getElementById('job-description').value;
+        const resumeFile = document.getElementById('resume').files[0];
+
+        // Validate inputs
+        if (!jobDescription) {
+            alert("Please provide the job description.");
+            return;
+        }
+
+        if (!resumeFile) {
+            alert("Please upload your resume.");
+            return;
+        }
+
+        const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedFormats.includes(resumeFile.type)) {
+            alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+            return ;
+        }
+
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        formData.append('resume', resumeFile);
+
+        // Show loader before the request is sent
+        document.getElementById('loader').style.display = 'block';
+
+        // Send the data to Flask backend via AJAX
+        fetch('/check-ats-score', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to process the request.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Hide loader once the data is received
+            document.getElementById('loader').style.display = 'none';
+
+            if (data.success) {
+                const atsScore = data.ats_score;
+                const missingKeywords = data.missing_keywords;
+                const profileSummary = data.profile_summary;
+
+                // Display ATS score as a pie chart
+                const ctx = document.getElementById('ats-score-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['ATS Score', 'Missing Keyword'],
+                        datasets: [{
+                            data: [atsScore, 100 - atsScore],
+                            backgroundColor: ['#36A2EB', '#FF6384'],
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Display ATS Score in text
+                const Score =  document.getElementById('ats-score-text').innerText = `ATS Score: ${atsScore}%`;
+
+                // Display Missing Keywords and Profile Summary
+                const Missing =  document.getElementById('missing-keywords').innerText = 'Missing Keywords: ' + missingKeywords.join(', ');
+                const Profile =  document.getElementById('profile-summary').innerText = 'Profile Summary: ' + profileSummary;
+
+                Score.style.backgroundColor = "black"
+
+                // Show the results
+                document.getElementById('ats-score-section').style.display = 'block';
+
+                // Update download link
+                if (data.updated_resume_url) {
+                    const downloadLink = document.querySelector('#download-section a');
+                    downloadLink.href = data.updated_resume_url;
+                    downloadLink.style.display = 'block';
+                    document.getElementById('download-section').style.display = 'block';
+                }
+            } else {
+                alert("Error in processing ATS score.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An unexpected error occurred. Please try again later.");
+        });
+    }
+</script>
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Check Your ATS Score</h1>
+    <p class="lead fw-bold text-dark">Optimize your resume and increase your chances of passing ATS filters.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%; padding-left: 20px; padding-right: 20px;">
+        <form id="atsForm" action="/check-ats-score" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow" onsubmit="checkATSScore(event)">
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job_description" class="form-control form-control-lg" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control form-control-lg" accept=".pdf, .doc, .docx" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg">Check ATS Score</button>
+        </form>
+
+        <!-- Loader (Hidden by default) -->
+        <div id="loader" style="display: none;">
+            <p>Loading...</p>
+        </div>
+
+        <div id="ats-score-section" class="d-flex justify-content-between mt-4" style="display: none;">
+            <!-- ATS Score Chart (left side) -->
+            <div style="flex: 1;">
+                <canvas id="ats-score-chart" width="200" height="200" style="border: 1px solid black;"></canvas>
+            </div>
+
+            <!-- ATS Score Text (right side) -->
+            <div style="flex: 1; text-align: left;">
+                <p class="text-info fw-bold" id="ats-score-text" ></p>
+                <p id="missing-keywords" class="text-info fw-bold" ></p>
+                <p id="profile-summary" class="text-info fw-bold" ></p>
+            </div>
+        </div>
+
+        <div id="download-section" class="text-center mt-4" style="display: none;">
+            <p class="text-success fw-bold">Your resume has been successfully updated!</p>
+            <a href="#" class="btn btn-light text-success border">Download Updated Resume</a>
+        </div>
+        
+    </div>
+</div>
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <h2>How Companies Check ATS Scores and Match Candidates with Job Descriptions</h2>
+    <p>With the increasing reliance on Applicant Tracking Systems (ATS), understanding how companies evaluate candidates based on their resumes and job descriptions is crucial. ATS scans and ranks resumes, helping recruiters and HR teams identify the best-fit candidates for a position. Here’s how companies use ATS scores to match applicants with job descriptions.</p>
+
+    <h3>1. Understanding ATS and Its Role</h3>
+    <p>ATS is software that automates the recruitment process by screening resumes and applications for specific keywords, skills, and qualifications. It helps companies quickly filter through large numbers of applicants and find those whose profiles best match the job description.</p>
+
+    <p>The ATS system assigns a score to each resume, reflecting how well the applicant's qualifications align with the job requirements. This score is based on factors such as keyword matching, experience, skills, education, and formatting.</p>
+
+    <h3>2. Reviewing the Job Description</h3>
+    <p>Before evaluating candidates, companies carefully review the job description to identify key requirements. This includes:</p>
+    <ul>
+        <li><strong>Required Skills:</strong> Specific technical and soft skills essential for the role.</li>
+        <li><strong>Experience:</strong> Relevant work experience, including the number of years in a similar position.</li>
+        <li><strong>Education:</strong> The level of education needed, such as a bachelor’s degree or certifications.</li>
+        <li><strong>Keywords:</strong> Important keywords and phrases that define the responsibilities and qualifications.</li>
+    </ul>
+
+    <h3>3. Optimizing Resumes for ATS</h3>
+    <p>Candidates need to optimize their resumes to ensure they pass ATS filters. This involves:</p>
+    <ul>
+        <li>Using the right keywords from the job description.</li>
+        <li>Ensuring proper formatting, as ATS systems can misread poorly formatted resumes.</li>
+        <li>Including relevant skills, experience, and qualifications that match the job requirements.</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}
+Cold Mail Generator - JobMentor
+{% endblock %}
+
+{% block content %}
+
+<!-- SEO Meta Tags -->
+<meta name="description" content="Generate personalized cold emails for job applications. Upload your job description and resume to receive a customized email template.">
+<meta name="keywords" content="Cold mail generator, job application email, job email template, professional emails, job search tool">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yourwebsite.com/cold-mail-generator">
+
+<!-- Open Graph Tags -->
+<meta property="og:title" content="Cold Mail Generator - Optimize Your Job Applications | JobMentor">
+<meta property="og:description" content="Easily generate cold emails tailored to job descriptions. Enhance your job search with our free email generator.">
+<meta property="og:url" content="https://yourwebsite.com/cold-mail-generator">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yourwebsite.com/static/images/cold-mail-banner.jpg">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cold Mail Generator - JobMentor">
+<meta name="twitter:description" content="Generate personalized cold emails for job applications with ease.">
+<meta name="twitter:image" content="https://yourwebsite.com/static/images/cold-mail-banner.jpg">
+
+<!-- Structured Data Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Cold Mail Generator - JobMentor",
+    "description": "Easily generate personalized cold emails for job applications using your job description and resume.",
+    "url": "https://yourwebsite.com/cold-mail-generator",
+    "publisher": {
+        "@type": "Organization",
+        "name": "JobMentor",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://yourwebsite.com/static/images/logo.png"
+        }
+    },
+    "mainEntity": {
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "How do I generate a cold email?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Upload your job description and resume. Our tool will generate a personalized email template for your job application."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What formats are supported for resumes?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "You can upload resumes in PDF, DOC, or DOCX formats."
+                }
+            }
+        ]
+    }
+}
+</script>
+<script>
+    async function generateColdMail(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Input Elements
+    const jobDescription = document.getElementById('job-description').value.trim();
+    const resumeFile = document.getElementById('resume').files[0];
+    const loader = document.getElementById('loader');
+    const coldMailSection = document.getElementById('cold-mail-section');
+    const downloadSection = document.getElementById('download-section');
+    const downloadLink = document.querySelector('#download-section a');
+    const copyButton = document.getElementById('copy-button'); // Copy button
+
+    // Reset previous output
+    coldMailSection.style.display = 'none';
+    coldMailSection.innerHTML = '';
+    downloadSection.style.display = 'none';
+    downloadLink.style.display = 'none';
+    copyButton.style.display = 'none';
+
+    // Input Validation
+    if (!jobDescription) {
+        alert("Please provide the job description.");
+        return;
+    }
+
+    if (!resumeFile) {
+        alert("Please upload your resume.");
+        return;
+    }
+
+    const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedFormats.includes(resumeFile.type)) {
+        alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+        return;
+    }
+
+    // Prepare Form Data
+    const formData = new FormData();
+    formData.append('job_description', jobDescription);
+    formData.append('resume', resumeFile);
+
+    try {
+        // Show loader
+        loader.style.display = 'block';
+
+        // Send data to the backend via fetch
+        const response = await fetch('/cold-mail-api', {
+            method: 'POST',
+            body: formData,
+        });
+
+        // Check if response is okay
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Hide loader
+        loader.style.display = 'none';
+
+        console.log('Received response:', data);
+
+        if (data.subject && data.email_body) {
+            const coldMailContainer = document.createElement('div');
+            coldMailContainer.classList.add('cold-mail-container');
+            const coldMailHTML = `
+                <div class="cold-mail-section">
+                    <h5 class="fw-bold text-dark">Subject:</h5>
+                    <p class="text-dark">${data.subject}</p>
+                </div>
+                <div class="cold-mail-section">
+                    <p class="text-dark">${data.email_body.introduction}</p>
+                </div>
+                <div class="cold-mail-section">
+                    <p class="text-dark">${data.email_body.interest}</p>
+                </div>
+                <div class="cold-mail-section">
+                    <p class="text-dark">${data.email_body.call_to_action}</p>
+                </div>
+                <div class="cold-mail-section">
+                    <p class="text-dark">${data.email_body.closing}</p>
+                </div>
+            `;
+            coldMailContainer.innerHTML = coldMailHTML;
+            coldMailSection.appendChild(coldMailContainer);
+            coldMailSection.style.display = 'block';
+
+            // Show copy button
+            copyButton.style.display = 'inline-block';
+
+            // Check for resume download URL
+            if (data.updated_resume_url) {
+                downloadLink.href = data.updated_resume_url;
+                downloadLink.style.display = 'block';
+                downloadSection.style.display = 'block';
+            }
+
+            // Add click event for copy button
+            copyButton.onclick = () => {
+                const plainTextMail = `
+                Subject: ${data.subject}
+
+                ${data.email_body.introduction}
+
+                ${data.email_body.interest}
+
+                ${data.email_body.call_to_action}
+
+                ${data.email_body.closing}
+                `.trim();
+                navigator.clipboard.writeText(plainTextMail)
+                    .then(() => alert("Cold mail copied to clipboard!"))
+                    .catch(err => console.error("Failed to copy cold mail:", err));
+            };
+        } else {
+            console.log('Response does not contain required data:', data);
+            alert(data.message || "Error in generating cold mail. Please try again.");
+        }
+    } catch (error) {
+        // Hide loader in case of error
+        loader.style.display = 'none';
+        console.error('Error:', error);
+        alert(`An unexpected error occurred: ${error.message}. Please try again later.`);
+    }
+}
+
+</script>
+
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Generate Your Cold Mail</h1>
+    <p class="lead fw-bold text-dark">Upload your job description and resume to receive a customized cold mail template.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%;">
+        <!-- Form Section -->
+        <form id="cold-mail-form" action="/cold-mail-api" method="POST" enctype="multipart/form-data" onsubmit="generateColdMail(event)">
+            <!-- Job Description Textarea -->
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job_description" class="form-control" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+        
+            <!-- Resume File Input -->
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control" accept=".pdf, .doc, .docx" required>
+            </div>
+        
+            <!-- Generate Cold Mail Button -->
+            <button type="submit" class="btn btn-success">Generate Cold Mail</button>
+        </form>
+        
+        <!-- Loader -->
+        <div id="loader" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Display Generated Cold Mail -->
+        <div id="cold-mail-section" class="text-left mt-4 p-3 border rounded shadow bg-light" style="display: none;">
+            <!-- Dynamic Cold Mail Content will appear here -->
+        </div>
+        
+        <!-- Copy Button -->
+        <div class="text-center mt-3">
+            <button id="copy-button" class="btn btn-secondary" style="display: none;">Copy Mail to Clipboard</button>
+        </div>
+        
+
+        <!-- Download Section -->
+        <div id="download-section" class="mt-4 text-center" style="display: none;">
+            <a href="#" download class="btn btn-primary">Download Updated Resume</a>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <h2>How to Write an Effective Cold Email</h2>
+    <p>Sending cold emails can be a powerful tool in reaching out to potential employers, clients, or business partners. However, writing a cold email that gets noticed and elicits a positive response requires careful thought and strategy.</p>
+
+    <h3>1. Personalize Your Email</h3>
+    <p>Start by addressing the recipient by name and reference any shared connections or common interests. Personalization increases the chances of your email being opened and read.</p>
+
+    <h3>2. Have a Clear Subject Line</h3>
+    <p>Your subject line should be concise and attention-grabbing. It should clearly indicate the purpose of your email and entice the recipient to open it.</p>
+
+    <h3>3. Keep It Short and to the Point</h3>
+    <p>Recipients are busy, so avoid lengthy emails. Keep your message concise, respectful, and easy to read. Focus on the key points you want to convey.</p>
+
+    <h3>4. Offer Value</h3>
+    <p>Instead of asking for something right away, provide value to the recipient. Highlight your skills or services that might be of interest to them. Show how you can solve a problem or benefit them in some way.</p>
+
+    <h3>5. End with a Clear Call to Action</h3>
+    <p>End your cold email with a clear call to action. Whether it's scheduling a meeting, requesting a response, or providing additional information, make it easy for the recipient to take the next step.</p>
+
+    <h3>6. Proofread and Edit</h3>
+    <p>Before sending, proofread your email for any grammatical or spelling errors. An email with errors can create a negative impression, so take the time to ensure your email is professional and polished.</p>
+
+    <h3>Conclusion</h3>
+    <p>Cold emailing can be an effective way to reach out to new opportunities. By personalizing your message, keeping it concise, and offering value, you increase your chances of receiving a positive response. Happy emailing!</p>
+</div>
+
+{% endblock %}

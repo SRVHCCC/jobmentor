@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jobmentor.org/sitemap.xml

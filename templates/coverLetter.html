@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}
+Cover Letter Generator - JobMentor
+{% endblock %}
+
+{% block content %}
+<script>
+    async function generateUpdateCoverLetter(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Input Elements
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const resumeFile = document.getElementById('resume').files[0];
+        const loader = document.getElementById('loader');
+        const updateCoverLetterSection = document.getElementById('update-cover-letter-section');
+        const copyButton = document.getElementById('copy-button');
+
+        // Reset previous output
+        updateCoverLetterSection.style.display = 'none';
+        updateCoverLetterSection.innerHTML = '';
+        copyButton.style.display = 'none';
+
+        // Input Validation
+        if (!jobDescription) {
+            alert("Please provide the job description.");
+            return;
+        }
+
+        if (!resumeFile) {
+            alert("Please upload your resume.");
+            return;
+        }
+
+        const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedFormats.includes(resumeFile.type)) {
+            alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+            return;
+        }
+
+        // Prepare Form Data
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        formData.append('resume', resumeFile);
+
+        try {
+            // Show loader
+            loader.style.display = 'block';
+
+            // Send data to the backend via fetch
+            const response = await fetch('/cover-letter-generator-api', {  // Update this URL to the correct API endpoint
+                method: 'POST',
+                body: formData,
+            });
+
+            // Check if response is okay
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Hide loader
+            loader.style.display = 'none';
+
+            // Display JSON response in structured format
+            if (data.cover_letter) {
+                const coverLetterHtml = `
+                    <h3>Cover Letter</h3>
+                    <h4>Opening:</h4>
+                    <p>${data.cover_letter.opening}</p>
+                    <h4>Middle:</h4>
+                    <p>${data.cover_letter.middle}</p>
+                    <h4>Closing:</h4>
+                    <p>${data.cover_letter.closing}</p>
+                `;
+
+                updateCoverLetterSection.innerHTML = coverLetterHtml;
+                updateCoverLetterSection.style.display = 'block';
+
+                // Show copy button
+                copyButton.style.display = 'inline-block';
+
+                // Add click event for copy button
+                copyButton.onclick = () => {
+                    const coverLetterText = updateCoverLetterSection.innerText;  // Extract the text content (no HTML tags)
+                    const tempTextArea = document.createElement('textarea');  // Create a temporary text area to hold the content
+
+                    document.body.appendChild(tempTextArea);  // Append the text area to the body
+                    tempTextArea.value = coverLetterText;  // Set the text content to the text area
+                    tempTextArea.select();  // Select the text in the text area
+                    document.execCommand('copy');  // Execute the copy command
+
+                    document.body.removeChild(tempTextArea);  // Remove the temporary text area from the DOM
+
+                    alert("Cover letter copied to clipboard!");  // Notify the user
+                };
+
+            } else {
+                alert(data.message || "Error in generating updated cover letter. Please try again.");
+            }
+        } catch (error) {
+            // Hide loader in case of error
+            loader.style.display = 'none';
+            console.error('Error:', error);
+            alert(`An unexpected error occurred: ${error.message}. Please try again later.`);
+        }
+    }
+</script>
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Generate Your Cover Letter</h1>
+    <p class="lead fw-bold text-dark">Upload your job description and resume to receive a customized ATS-friendly cover letter in text format.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%;">
+        <!-- Form Section -->
+        <form id="ats-cover-letter-form" enctype="multipart/form-data" onsubmit="generateUpdateCoverLetter(event)" action="/cover-letter-generator-api" method="POST">
+            <!-- Job Description Textarea -->
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job_description" class="form-control" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+
+            <!-- Resume File Input -->
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control" accept=".pdf, .doc, .docx" required>
+            </div>
+
+            <!-- Generate Cover Letter Button -->
+            <button type="submit" class="btn btn-success">Generate Cover Letter</button>
+        </form>
+
+        <!-- Loader -->
+        <div id="loader" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Display Generated Cover Letter -->
+        <div id="update-cover-letter-section" class="text-left mt-4 p-3 border rounded shadow bg-light" style="display: none;">
+        </div>
+
+        <!-- Copy Button -->
+        <div class="text-center mt-3">
+            <button id="copy-button" class="btn btn-secondary" style="display: none;">Copy Cover Letter</button>
+        </div>
+    </div>
+</div>
+
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <h2>How to Update Your Cover Letter Effectively</h2>
+    <p>A well-crafted cover letter can make all the difference when applying for a job. It allows you to personalize your application and highlight your strengths in relation to the specific job role. Here are some important steps and tips to help you update your cover letter to better match the job you're applying for:</p>
+
+    <h3>1. Understand the Job Description</h3>
+    <p>Before you update your cover letter, it's essential to thoroughly read and understand the job description. Identify the key responsibilities, skills, and qualifications that the employer is seeking. Tailor your cover letter to emphasize how your background, experience, and skills align with these requirements. This demonstrates to the employer that you have a deep understanding of the role and are a strong fit.</p>
+
+    <h3>2. Address the Hiring Manager Personally</h3>
+    <p>Whenever possible, try to address the cover letter to the hiring manager or the person responsible for the hiring process. Using a personalized greeting (e.g., "Dear Mr. Smith") can make your application stand out. If you're unsure of the person's name, a general greeting like "Dear Hiring Manager" works as well.</p>
+
+    <h3>3. Start with a Strong Opening</h3>
+    <p>The opening of your cover letter should grab the hiring manager's attention. Briefly introduce yourself and explain why you're excited about the job. You can mention how you came across the job opening and why you're specifically interested in the position and company. A compelling opening sets the tone for the rest of your cover letter.</p>
+
+    <h3>4. Highlight Your Relevant Experience and Skills</h3>
+    <p>In the body of your cover letter, highlight your relevant experience, achievements, and skills. Focus on the most important aspects of the job description and demonstrate how your skills match those requirements. Be specific about your accomplishments and how they will benefit the employer. For example, if the job requires strong project management skills, provide examples of projects you have successfully managed in the past.</p>
+
+    <h3>5. Show Enthusiasm for the Role</h3>
+    <p>Employers want to hire candidates who are excited about the opportunity and the company. In your cover letter, express your enthusiasm for the role and explain why you are passionate about the work the company does. This can show that you are not just looking for any job, but are genuinely interested in the position and the organization.</p>
+
+    <h3>6. Keep It Concise and Focused</h3>
+    <p>Your cover letter should be clear, concise, and to the point. Avoid writing long paragraphs or repeating information from your resume. Keep your letter focused on your key strengths and the aspects of your experience that are most relevant to the job. Ideally, your cover letter should be no longer than one page.</p>
+
+    <h3>7. Proofread and Edit</h3>
+    <p>Once you've written your cover letter, take the time to proofread it carefully. Look for grammatical errors, spelling mistakes, or awkward phrasing. A well-written cover letter reflects your professionalism and attention to detail. If possible, have someone else review your cover letter for feedback and suggestions.</p>
+
+    <h3>8. End with a Strong Closing</h3>
+    <p>In your closing paragraph, express your desire for an interview and thank the employer for considering your application. Reiterate your enthusiasm for the role and mention that you look forward to the opportunity to discuss your qualifications further. A polite and confident closing leaves a positive impression on the employer.</p>
+
+    <h3>Conclusion</h3>
+    <p>Updating your cover letter for each job application is an important step in presenting yourself as the ideal candidate. By tailoring your cover letter to match the job description and showcasing your relevant skills, experience, and enthusiasm, you increase your chances of standing out and securing an interview. Remember, a well-crafted cover letter can be the key to opening the door to your next opportunity.</p>
+</div>
+
+{% endblock %}

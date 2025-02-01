@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}
+Generate Interview Questions - JobMentor
+{% endblock %}
+
+{% block content %}
+<script>
+    async function generateQuestions(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Input Elements
+        const jobDescription = document.getElementById('job-description').value.trim();
+        const resumeFile = document.getElementById('resume').files[0];
+        const loader = document.getElementById('loader');
+        const questionSection = document.getElementById('questions-section');
+
+        // Reset previous output
+        questionSection.style.display = 'none';
+        questionSection.innerHTML = '';
+
+        // Input Validation
+        if (!jobDescription) {
+            alert("Please provide the job description.");
+            return;
+        }
+
+        if (!resumeFile) {
+            alert("Please upload your resume.");
+            return;
+        }
+
+        const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedFormats.includes(resumeFile.type)) {
+            alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+            return;
+        }
+
+        // Prepare Form Data
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        formData.append('resume', resumeFile);
+
+        try {
+            // Show loader
+            loader.style.display = 'block';
+
+            // Send data to the backend via fetch
+            const response = await fetch('/generate-questions-api', {
+                method: 'POST',
+                body: formData,
+            });
+
+            // Handle response
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            loader.style.display = 'none';
+
+            // Process the response
+            if (data && typeof data === 'object') {
+                displayQuestions(data, questionSection);
+            } else {
+                alert(data.message || "Error in generating questions. Please try again.");
+                console.error('Invalid response structure:', data);
+            }
+        } catch (error) {
+            // Hide loader and log error
+            loader.style.display = 'none';
+            console.error('Error:', error);
+            alert(`An unexpected error occurred: ${error.message}. Please try again later.`);
+        }
+    }
+
+    // Helper function to display questions
+    function displayQuestions(data, questionSection) {
+        let questionHTML = '';
+
+        Object.keys(data).forEach((category) => {
+            if (data[category] && Array.isArray(data[category])) {
+                questionHTML += `
+                    <div class="question-category">
+                        <h5 class="fw-bold text-dark">${category.replace(/([A-Z])/g, ' $1').trim()}:</h5>
+                        <ul>${data[category].map(q => `<li>${q}</li>`).join('')}</ul>
+                    </div>
+                `;
+            } else {
+                console.warn(`Category "${category}" does not have a valid question array.`);
+            }
+        });
+
+        if (questionHTML) {
+            const questionContainer = document.createElement('div');
+            questionContainer.classList.add('question-container');
+            questionContainer.innerHTML = questionHTML;
+
+            questionSection.appendChild(questionContainer);
+            questionSection.style.display = 'block';
+        } else {
+            alert("No valid questions found in the response.");
+            console.warn('Response data does not contain valid questions:', data);
+        }
+    }
+</script>
+
+
+
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Generate Interview Questions</h1>
+    <p class="lead fw-bold text-dark">Upload your job description and resume to receive customized interview questions.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%;">
+        <form id="job-description-form" action="/generate-questions-api" method="POST" enctype="multipart/form-data" onsubmit="generateQuestions(event)">
+            <!-- Job Description Textarea -->
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job-description" class="form-control" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control" accept=".pdf, .doc, .docx" required>
+            </div>
+            <button type="submit" class="btn btn-success">Generate Questions</button>
+        </form>
+
+        <!-- Loader -->
+        <div id="loader" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div id="questions-section" class="mt-4 p-3 border rounded shadow bg-light" style="display: none;">
+            <!-- Dynamic question will appear here -->
+        </div>
+        
+    </div>
+</div>
+
+
+
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <h2>How to Conduct an Effective Interview and Ask the Right Questions</h2>
+    <p>Interviewing candidates can be a daunting task, but with the right approach, it can be a rewarding experience that helps you identify the most suitable candidates for your team. Here are some important steps and tips to conduct an interview that not only evaluates the technical skills but also gauges cultural fit, problem-solving abilities, and communication skills.</p>
+
+    <h3>1. Preparing for the Interview</h3>
+    <p>Before you even begin conducting the interview, it’s crucial to prepare. Review the job description carefully to understand the essential skills, qualifications, and experience required. A well-prepared interviewer knows exactly what they are looking for in a candidate. Ensure you have a list of interview questions that match the job role, as well as questions that will reveal a candidate's soft skills, such as teamwork, leadership, and adaptability.</p>
+
+    <p>Additionally, review the candidate’s resume to get a deeper understanding of their previous roles, accomplishments, and career progression. This will allow you to ask more specific, personalized questions and demonstrate that you have taken the time to learn about their background.</p>
+
+    <h3>2. Setting the Right Environment</h3>
+    <p>Creating a comfortable and open environment is key to ensuring that candidates feel at ease. A relaxed candidate is more likely to provide honest, insightful answers. Choose a quiet, professional setting that allows for a distraction-free conversation. Avoid interrupting or rushing through questions, as this can make candidates feel uncomfortable and under pressure.</p>
+
+    <p>Be respectful and courteous to all candidates, regardless of whether or not they are a good fit for the role. Their experience during the interview can influence their perception of your company.</p>
+
+    <h3>3. Asking the Right Questions</h3>
+    <p>The key to an effective interview lies in asking the right questions. It’s important to ask open-ended questions that allow candidates to elaborate on their experience and skills. Use behavioral and situational questions to gauge how candidates handle challenges and situations in real-life scenarios. For example:</p>
+    <ul>
+        <li><strong>Behavioral Questions:</strong> "Can you tell me about a time when you had to deal with a difficult team member? How did you handle the situation?"</li>
+        <li><strong>Situational Questions:</strong> "If you were given a project with tight deadlines and limited resources, how would you approach it?"</li>
+    </ul>
+
+    <p>It’s also beneficial to ask technical questions that assess the candidate’s knowledge of the field. For example, in a software engineering interview, you could ask the candidate to solve a coding problem or explain a particular programming concept.</p>
+
+    <p>Additionally, don’t forget to ask about the candidate’s career aspirations, motivations, and why they want to work for your company. This helps you gauge their cultural fit and commitment to the role. Questions like “What excites you about this role?” or “Where do you see yourself in five years?” can give you valuable insight.</p>
+
+    <h3>4. Assessing Soft Skills and Cultural Fit</h3>
+    <p>Technical skills are essential, but soft skills and cultural fit are just as important. During the interview, pay attention to how the candidate communicates, listens, and interacts with you. Are they confident but not arrogant? Do they demonstrate empathy and understanding? Can they articulate their thoughts clearly?</p>
+
+    <p>Ask questions that explore a candidate’s ability to work in teams, adapt to changes, and solve problems. Some examples include:</p>
+    <ul>
+        <li>“Tell me about a time when you had to collaborate with a team to achieve a goal.”</li>
+        <li>“How do you handle feedback and criticism?”</li>
+        <li>“Describe a challenging situation at work and how you resolved it.”</li>
+    </ul>
+
+    <h3>5. Providing the Candidate with Insight into the Role and Company</h3>
+    <p>One of the most important aspects of an interview is providing the candidate with a clear understanding of the role and the company. Be transparent about the expectations, the team culture, and the challenges the candidate may face in the role. This will help them make an informed decision about whether the position aligns with their career goals and values.</p>
+
+    <p>Allow time for the candidate to ask questions as well. Their questions can give you valuable insight into what’s important to them and whether they are genuinely interested in the position.</p>
+
+    <h3>6. Evaluating the Candidate</h3>
+    <p>After the interview, take the time to evaluate the candidate’s responses. Consider both the technical skills and soft skills they demonstrated. Evaluate their problem-solving approach, their ability to communicate, and their fit within the team. Additionally, take note of their enthusiasm and interest in the role and company.</p>
+
+    <p>It can be helpful to use a scoring system or rubric to objectively evaluate candidates, ensuring consistency across interviews and making it easier to compare candidates. This can include factors such as communication skills, technical expertise, and cultural fit.</p>
+
+    <h3>7. Making a Decision</h3>
+    <p>After evaluating all candidates, make your decision based on a holistic assessment. Don’t just focus on the most technically skilled candidate; consider how each candidate’s values, work ethic, and personality align with the company’s goals and culture.</p>
+
+    <p>Once you’ve made your decision, contact the successful candidate with an offer and provide feedback to those who weren’t selected. Constructive feedback is valuable for their growth and demonstrates your respect for their time and effort during the interview process.</p>
+
+    <h3>Conclusion</h3>
+    <p>Interviewing is an art, and mastering it takes practice and reflection. By preparing thoroughly, asking the right questions, and evaluating candidates holistically, you can ensure that you hire the best talent for your company. Ultimately, a good interview not only identifies a candidate’s qualifications but also helps determine if they will thrive in your company’s environment and contribute to its success.</p>
+</div>
+
+{% endblock %}

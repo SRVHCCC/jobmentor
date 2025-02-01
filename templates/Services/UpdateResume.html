@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}
+Check ATS Score - JobMentor
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function checkATSScore(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const jobDescription = document.getElementById('job-description').value;
+        const resumeFile = document.getElementById('resume').files[0];
+
+        // Validate inputs
+        if (!jobDescription) {
+            alert("Please provide the job description.");
+            return;
+        }
+
+        if (!resumeFile) {
+            alert("Please upload your resume.");
+            return;
+        }
+
+        const allowedFormats = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedFormats.includes(resumeFile.type)) {
+            alert("Please upload a valid resume file (PDF, DOC, DOCX).");
+            return ;
+        }
+
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        formData.append('resume', resumeFile);
+
+        // Send the data to Flask backend via AJAX
+        fetch('/check-ats-score', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to process the request.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const atsScore = data.ats_score;
+                const missingKeywords = data.missing_keywords;
+                const profileSummary = data.profile_summary;
+
+                // Display ATS score as a pie chart
+                const ctx = document.getElementById('ats-score-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['ATS Score', 'Remaining'],
+                        datasets: [{
+                            data: [atsScore, 100 - atsScore],
+                            backgroundColor: ['#36A2EB', '#FF6384'],
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Display ATS Score in text
+                document.getElementById('ats-score-text').innerText = `ATS Score: ${atsScore}`;
+
+                // Display Missing Keywords and Profile Summary
+                document.getElementById('missing-keywords').innerText = 'Missing Keywords: ' + missingKeywords.join(', ');
+                document.getElementById('profile-summary').innerText = 'Profile Summary: ' + profileSummary;
+
+                // Show the results
+                document.getElementById('ats-score-section').style.display = 'block';
+
+                // Update download link
+                if (data.updated_resume_url) {
+                    const downloadLink = document.querySelector('#download-section a');
+                    downloadLink.href = data.updated_resume_url;
+                    downloadLink.style.display = 'block';
+                    document.getElementById('download-section').style.display = 'block';
+                }
+            } else {
+                alert("Error in processing ATS score.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An unexpected error occurred. Please try again later.");
+        });
+    }
+</script>
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-dark">Check Your ATS Score</h1>
+    <p class="lead fw-bold text-dark">Optimize your resume and increase your chances of passing ATS filters.</p>
+</div>
+
+<div class="d-flex justify-content-center mt-4">
+    <div style="width: 60%;">
+        <form id="atsForm" action="/check-ats-score" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow" onsubmit="checkATSScore(event)">
+            <div class="mb-4">
+                <label for="job-description" class="form-label fw-bold text-dark">Job Description</label>
+                <textarea id="job-description" name="job_description" class="form-control form-control-lg" rows="6" placeholder="Paste the job description here..." required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="resume" class="form-label fw-bold text-dark">Upload Your Resume</label>
+                <input type="file" id="resume" name="resume" class="form-control form-control-lg" accept=".pdf, .doc, .docx" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg">Check ATS Score</button>
+        </form>
+
+        <div id="ats-score-section" class="text-center mt-4" style="display: none;">
+            <!-- ATS Score Chart -->
+            <canvas id="ats-score-chart" width="200" height="200"></canvas>
+
+            <!-- ATS Score Text -->
+            <p class="text-info fw-bold" id="ats-score-text"></p>
+
+            <!-- Missing Keywords & Profile Summary -->
+            <p id="missing-keywords" class="text-info fw-bold"></p>
+            <p id="profile-summary" class="text-info fw-bold"></p>
+
+            <!-- Download Button -->
+            <button class="btn btn-primary" onclick="enableDownload()">Update Resume</button>
+        </div>
+
+        <div id="download-section" class="text-center mt-4" style="display: none;">
+            <p class="text-success fw-bold">Your resume has been successfully updated!</p>
+            <a href="#" class="btn btn-light text-success border">Download Updated Resume</a>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<div class="container border p-4">
+    <!-- Existing content about ATS, Keywords, Resume improvement -->
+</div>
+
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}
+Contact Us - JobMentor
+{% endblock %}
+
+
+{% block meta %}
+<meta name="description" content="Get in touch with us for inquiries, support, or any questions you may have. Contact us today and we'll get back to you as soon as possible.">
+<meta name="keywords" content="contact us, support, inquiries, customer service, get in touch, contact form, feedback, questions">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Contact Us - JobMentor | Get in Touch with Us">
+<meta property="og:description" content="Reach out to us for any questions or support. Fill out the contact form and our team will get back to you as soon as possible.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ url_for('contact') }}">
+<meta property="og:image" content="URL_OF_YOUR_IMAGE">
+{% endblock %}
+
+{% block content %}
+<section id="contact-us" class="py-5" style="background-color: #f8f9fa;">
+  <div class="container">
+    <div class="row g-5">
+      <!-- Left Section: Image -->
+      <div class="col-lg-6">
+        <div class="text-center">
+          <img src="{{ url_for('static', filename='img/contact-us.jpg') }}" 
+               alt="Contact Us" 
+               class="img-fluid rounded shadow-lg" 
+               style="max-width: 100%; height: auto;">
+        </div>
+      </div>
+
+      <!-- Right Section: Contact Form -->
+      <div class="col-lg-6">
+        <h2 style="font-weight: bold; color: #333;">Get in Touch</h2>
+        <p style="color: #555; font-size: 16px;">We would love to hear from you! Please fill out the form below, and we will get back to you as soon as possible.</p>
+        
+        <form action="{{ url_for('contact') }}" method="post">
+          <div class="mb-3">
+            <label for="name" class="form-label" style="font-weight: bold;">Your Name</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Enter your name" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label" style="font-weight: bold;">Your Email</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+          </div>
+          <div class="mb-3">
+            <label for="message" class="form-label" style="font-weight: bold;">Your Message</label>
+            <textarea id="message" name="message" class="form-control" rows="5" placeholder="Write your message here..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success">Send Message</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Contact Information Card -->
+    <div class="card mt-5 shadow-lg">
+      <div class="card-body">
+        <h4 class="card-title" style="font-weight: bold; color: #333;">Contact Information</h4>
+        <p class="card-text" style="color: #555; font-size: 16px;">Feel free to reach out to us through any of the following channels:</p>
+        
+        <ul class="list-unstyled mt-4">
+          <li class="mb-3">
+            <i class="bi bi-geo-alt-fill text-primary" style="font-size: 1.5rem;"></i>
+            <span style="margin-left: 10px; color: #333;">225 Gram Post Patna Tamoli, District Panna  ,Madhya Pradesh ,488333 </span>
+          </li>
+          <li class="mb-3">
+            <i class="bi bi-telephone-fill text-success" style="font-size: 1.5rem;"></i>
+            <span style="margin-left: 10px; color: #333;">+91 8103 306 133</span>
+          </li>
+          <li class="mb-3">
+            <i class="bi bi-envelope-fill text-danger" style="font-size: 1.5rem;"></i>
+            <span style="margin-left: 10px; color: #333;">contact@jobmentor.com</span>
+          </li>
+        </ul>
+        
+        <h4 class="mt-4" style="font-weight: bold; color: #333;">Follow Us</h4>
+        <div class="d-flex mt-3">
+          <a href="https://www.facebook.com/himanshu.chaurasiya.7564/" target="_blank" class="me-3">
+            <i class="bi bi-facebook text-primary" style="font-size: 1.8rem;"></i>
+          </a>
+          <a href="https://x.com/Himansh33938060" target="_blank" class="me-3">
+            <i class="bi bi-twitter text-info" style="font-size: 1.8rem;"></i>
+          </a>
+          <a href="https://www.linkedin.com/in/himanshu-chaurasiya-b87432288/" target="_blank"> 
+            <i class="bi bi-linkedin text-primary" style="font-size: 1.8rem;"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
